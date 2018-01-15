@@ -1,7 +1,7 @@
 require 'sinatra/base'
 
 module Sinatra
-  module ProfileHelper
+  module UserHelper
 
     def profile_route
       puts session[:user]
