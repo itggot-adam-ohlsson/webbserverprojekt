@@ -4,8 +4,11 @@ class User < Model
 
   attr_reader :name
 
+  @model = itself
+  @modelsById = Hash.new
+
   def initialize(id)
-    super(id, itself)
+    super(id)
   end
 
   def self.get(id)
@@ -16,8 +19,6 @@ class User < Model
     user.password = dbresult[2]
     return user
   end
-
-  private
 
   def name=(name)
     @name = name

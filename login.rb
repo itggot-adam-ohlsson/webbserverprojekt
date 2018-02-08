@@ -1,6 +1,6 @@
 class SFBio < Sinatra::Base
 
-  helpers Sinatra::LoginHelper, Sinatra::RegisterHelper, Sinatra::UserHelper
+  helpers Sinatra::LoginHelper, Sinatra::RegisterHelper, Sinatra::UserHelper, Sinatra::MoviesHelper
 
   enable :sessions
 
@@ -35,5 +35,13 @@ class SFBio < Sinatra::Base
 
   post '/changed' do
     password_changed_route
+  end
+
+  get '/movies' do
+    movies_route
+  end
+
+  get '/tickets/:id' do
+    tickets_route
   end
 end

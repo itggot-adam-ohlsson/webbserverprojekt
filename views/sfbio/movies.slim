@@ -1,0 +1,7 @@
+- for i in 0..@movies.length-1
+    h1 #{@movies[i][1]}
+    h3 Genre: #{@movies[i][2]}
+    p Duration: #{@movies[i][3]} minutes
+
+    a href="/tickets/#{@movies[i][0]}" Tickets
+    hr
