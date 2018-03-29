@@ -1,9 +1,11 @@
-form action="/authentication" method="post"
-  input type="text" name="username"
-  input type="password" name="password"
-  button type="submit" Login
-
-form action="/register" method="post"
-  input type="text" name="username"
-  input type="password" name="password"
-  button type="submit" Register
+div.onePageWrapper
+  header
+    div.headerWrapper
+      h1 Google BIO
+      div.login
+        form class="loginForm" action="/authentication" method="post"
+          input type="text" name="username" placeholder="Email"
+          input type="password" name="password" placeholder="Password"
+          div.auth
+            button type="submit" Login
+            a href="/register" Sign up

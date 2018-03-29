@@ -1,7 +1,33 @@
-- for i in 0..@movies.length-1
-    h1 #{@movies[i][1]}
-    h3 Genre: #{@movies[i][2]}
-    p Duration: #{@movies[i][3]} minutes
-
-    a href="/tickets/#{@movies[i][0]}" Tickets
-    hr
+div.wrapper
+  header
+    div.headerWrapper
+      a href="/profile"
+        h1 Google BIO
+      h1 MOVIES
+  nav
+    div.navWrapper
+      div.pages
+        a href="/profile" Home
+        a href="/movies" Movies
+        a href="#" Contact
+      div.settings
+        div.settingDropdown
+          h2 Settings
+          div.dropdown
+            a href="/change" Change Password
+            a href="/logout" Logout
+  div.moviesSection
+    div.moviesWrapper
+      div.movies
+        - for i in 0..@movies.length-1
+          div.movie
+            a href="movies/#{@movies[i][0]}"
+              / h2 Genre: #{@movies[i][2]}
+              / h3 Seats left: #{@movies[i][4]}
+              / p Duration: #{@movies[i][3]} minutes
+              img src="img/#{@movies[i][5]}.jpg" alt="#{@movies[i][1]}"
+              h1 #{@movies[i][0]}. #{@movies[i][1]}
+            hr
+footer
+  div.footerWrapper
+    h1 &copy; Google BIO 2018

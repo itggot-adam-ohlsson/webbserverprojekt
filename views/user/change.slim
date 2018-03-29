@@ -1,10 +1,13 @@
-form action="/changed" method="post"
-  fieldset
-    legend Change your password
-    div
-      input type="password" name="old_password" id="old"
-      label for="old" Old password
-    div
-      input type="password" name="new_password" id="new"
-      label for="new" New password
-  button type="submit" Change Password
+div.onePageWrapper
+  header
+    div.headerWrapper
+      a href="/profile"
+        h1 Google BIO
+      h1 CHANGE PASSWORD
+  div.section
+    div.sectionWrapper
+      div.register
+        form class="registerForm" action="/changed" method="post"
+          input type="password" name="old_password" placeholder="Old password"
+          input type="password" name="new_password" placeholder="New password"
+          button class="registerBtn" type="submit" Change password

@@ -1,8 +1,7 @@
 class SFBio < Sinatra::Base
 
-  helpers Sinatra::LoginHelper, Sinatra::RegisterHelper, Sinatra::UserHelper, Sinatra::MoviesHelper
-
-  enable :sessions
+  #enable :sessions
+  use Rack::Session::Cookie, :key=> 'rack.session'
 
   get '/' do
     db = SQLite3::Database.open('db/LoginSystem.sqlite')
@@ -10,15 +9,22 @@ class SFBio < Sinatra::Base
   end
 
   get '/logout' do
-    logout_route
+    redirect_path = User.get(session[:user]).logout(self)
+    redirect redirect_path
   end
 
   post '/authentication' do
-    authentication_route(params)
+    redirect_path = User.authentication(self, params["username"], params["password"])
+    redirect redirect_path
+  end
+
+  get '/register' do
+    slim :'register/register'
   end
 
   post '/register' do
-    register_route(params)
+    redirect_path = User.register(params["username"], params["password"])
+    redirect redirect_path
   end
 
   get '/registered' do
@@ -26,22 +32,49 @@ class SFBio < Sinatra::Base
   end
 
   get '/profile' do
-    profile_route
+    @username = User.get(session[:user]).name
+    slim :'user/profile'
   end
 
   get '/change' do
-    password_change_route
+    slim :'user/change'
   end
 
   post '/changed' do
-    password_changed_route
+    redirect_path = User.get(session[:user]).changedPassword(self, params["old_password"], params["new_password"])
+    redirect redirect_path
   end
 
   get '/movies' do
-    movies_route
+    @movies = Movie.getAll
+    slim :'sfbio/movies'
   end
 
-  get '/tickets/:id' do
-    tickets_route
+  get '/movies/:id' do
+    @movie = Movie.get(params["id"])
+    slim :'sfbio/movie'
+  end
+
+  get '/movies/:id/tickets' do
+    @movie = Movie.get(params["id"])
+    slim :'sfbio/tickets'
+  end
+
+  post '/movies/:id/tickets/seats' do
+    booking = Booking.create(session[:user], params["id"])
+    params["seats"].each do |seatNr|
+      Seat.create(booking.id, booking.movieId, seatNr)
+    end
+    redirect "/movies/#{booking.movieId}/tickets/#{booking.id}"
+  end
+
+  get '/movies/:id/tickets/:bookingId' do
+    @movie = Movie.get(params["id"])
+    booking = Booking.get_or_initialize(params["bookingId"])
+    @seats = []
+    booking.seats.each do |seat|
+      @seats << seat.seatNr
+    end
+    slim :'sfbio/seats'
   end
 end
