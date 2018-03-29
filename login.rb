@@ -57,13 +57,16 @@ class SFBio < Sinatra::Base
 
   get '/movies/:id/tickets' do
     @movie = Movie.get(params["id"])
+    # Håller på att fixa en sak här så listan gör inget ännu egentligen.
+    @booked = [1, 4, 5]
     slim :'sfbio/tickets'
   end
 
   post '/movies/:id/tickets/seats' do
     booking = Booking.create(session[:user], params["id"])
+    seatClass = "booked"
     params["seats"].each do |seatNr|
-      Seat.create(booking.id, booking.movieId, seatNr)
+      Seat.create(booking.id, booking.movieId, seatNr, seatClass)
     end
     redirect "/movies/#{booking.movieId}/tickets/#{booking.id}"
   end

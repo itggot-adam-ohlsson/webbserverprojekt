@@ -20,7 +20,13 @@ div.wrapper
 
   h2 Pick seats for #{@movie.name}
 
+  // Håller på att fixa en sak här!!
   form action="/movies/#{@movie.id}/tickets/seats" method="post"
     - @movie.seats.times do |i|
-        input type="checkbox" name="seats[]" value="#{i}"
+      - if @booked.include? i
+          div class="checkbox red"
+            input type="checkbox" name="seats[]" value="#{i}"
+      - else
+          div class="checkbox"
+            input type="checkbox" name="seats[]" value="#{i}"
     button type="submit" Book

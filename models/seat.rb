@@ -21,9 +21,9 @@ class Seat < Model
     return seat
   end
 
-  def self.create(bookingId, movieId, seatNr)
+  def self.create(bookingId, movieId, seatNr, seatClass)
     db = SQLite3::Database.open('db/LoginSystem.sqlite')
-    db.execute('INSERT INTO "main"."seats" ("bookingId","seatNr") VALUES (?,?)', [bookingId, seatNr])
+    db.execute('INSERT INTO "main"."seats" ("bookingId","seatNr", "seatClass") VALUES (?,?,?)', [bookingId, seatNr, seatClass])
 
     id = db.execute('SELECT last_insert_rowid();').first.first
     self.get(id)
