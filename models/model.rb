@@ -7,11 +7,37 @@ class Model
     @id = id
   end
 
+  # Denna metoden hämtar/sparar model av id som hör ihop med id.
   def self.get_or_initialize(id)
     if @modelsById.include? id
       @modelsById[id]
     else
       @modelsById[id] = @model.new(id)
+    end
+  end
+
+  def self.hashToModel(dbmodel, items)
+    items.keys.length.times do |i|
+      dbmodel.send(items.keys[i].to_s + "=", items.values[i]) unless items.keys[i] == "id"
+    end
+    dbmodel
+  end
+
+  def self.get(id)
+    dbmodel = get_or_initialize(id)
+    db = SQLite3::Database.open('db/LoginSystem.sqlite')
+    db.results_as_hash = true
+    dbresult = db.execute("SELECT * FROM #{self.to_s.downcase}s WHERE id = ?", id).first
+    hashToModel(dbmodel, dbresult)
+  end
+
+  def self.getAll
+    db = SQLite3::Database.open('db/LoginSystem.sqlite')
+    db.results_as_hash = true
+    dbresult = db.execute("SELECT * FROM #{self.to_s.downcase}s")
+    dbresult.map do |items|
+      dbmodel = get_or_initialize(items["id"])
+      hashToModel(dbmodel, items)
     end
   end
 

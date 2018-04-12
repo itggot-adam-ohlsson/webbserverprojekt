@@ -21,12 +21,12 @@ div.wrapper
       div.movies
         - for i in 0..@movies.length-1
           div.movie
-            a href="movies/#{@movies[i][0]}"
+            a href="movies/#{@movies[i].id}"
               / h2 Genre: #{@movies[i][2]}
               / h3 Seats left: #{@movies[i][4]}
               / p Duration: #{@movies[i][3]} minutes
-              img src="img/#{@movies[i][5]}.jpg" alt="#{@movies[i][1]}"
-              h1 #{@movies[i][0]}. #{@movies[i][1]}
+              img src="img/#{@movies[i].img}.jpg" alt="#{@movies[i].name}"
+              h1 #{@movies[i].id}. #{@movies[i].name}
             hr
 footer
   div.footerWrapper

@@ -46,6 +46,7 @@ class SFBio < Sinatra::Base
 
   get '/movies' do
     @movies = Movie.getAll
+    puts @movies[0]
     slim :'sfbio/movies'
   end
 
@@ -65,7 +66,7 @@ class SFBio < Sinatra::Base
     booking = Booking.create({"userId" => session[:user], "movieId" => params["id"]})
     seatClass = "booked"
     params["seats"].each do |seatNr|
-      Seat.create(booking.id, booking.movieId, seatNr, seatClass)
+      Seat.create("bookingId" => booking.id, "seatNr" => seatNr)
     end
     redirect "/movies/#{booking.movieId}/tickets/#{booking.id}"
   end
