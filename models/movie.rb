@@ -29,11 +29,6 @@ class Movie < Model
     return movie
   end
 
-  def self.create(name, genre, duration, seats)
-    db = SQLite3::Database.open('db/LoginSystem.sqlite')
-    dbresult = db.execute('INSERT INTO "main"."movies" ("name","genre","duration","seats") VALUES (?,?,?,?)', [name, genre, duration, seats])
-  end
-
   def name=(name)
     @name = name
   end

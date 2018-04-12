@@ -17,7 +17,12 @@ class Model
 
   def self.create(items)
     db = SQLite3::Database.open('db/LoginSystem.sqlite')
-    dbresult = db.execute('INSERT INTO "main"."movies" ("name","genre","duration","seats") VALUES (?,?,?,?)', [name, genre, duration, seats])
+    name = self.to_s.downcase
+    item_keys = items.keys.join(",")
+    item_values = (["?"]*items.length).join(",")
+    dbresult = db.execute("INSERT INTO #{name}s (#{item_keys}) VALUES (#{item_values})", items.values)
+    id = db.execute('SELECT last_insert_rowid();').first.first
+    self.get(id)
   end
 
   def method_missing(method, *args)

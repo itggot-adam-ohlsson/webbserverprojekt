@@ -62,7 +62,7 @@ class SFBio < Sinatra::Base
   end
 
   post '/movies/:id/tickets/seats' do
-    booking = Booking.create(session[:user], params["id"])
+    booking = Booking.create({"userId" => session[:user], "movieId" => params["id"]})
     seatClass = "booked"
     params["seats"].each do |seatNr|
       Seat.create(booking.id, booking.movieId, seatNr, seatClass)

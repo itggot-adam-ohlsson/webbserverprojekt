@@ -21,13 +21,6 @@ class Booking < Model
     return booking
   end
 
-  def self.create(userId, movieId)
-    db = SQLite3::Database.open('db/LoginSystem.sqlite')
-    db.execute('INSERT INTO "main"."bookings" ("userId","movieId") VALUES (?,?)', [userId, movieId])
-    id = db.execute('SELECT last_insert_rowid();').first.first
-    self.get(id)
-  end
-
   def userId=(userId)
     @userId = userId
   end
