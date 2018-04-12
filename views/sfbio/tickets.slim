@@ -16,17 +16,20 @@ div.wrapper
           div.dropdown
             a href="/change" Change Password
             a href="/logout" Logout
-  h1 #{@movie.name}
 
+  h1 #{@movie.name}
   h2 Pick seats for #{@movie.name}
 
   // Håller på att fixa en sak här!!
-  form action="/movies/#{@movie.id}/tickets/seats" method="post"
-    - @movie.seats.times do |i|
-      - if @booked.include? i
-          div class="checkbox red"
-            input type="checkbox" name="seats[]" value="#{i}"
-      - else
-          div class="checkbox"
-            input type="checkbox" name="seats[]" value="#{i}"
+  form class="tickets-form" action="/movies/#{@movie.id}/tickets/seats" method="post"
+    div class="seats"
+      - @movie.seats.times do |i|
+        - if @booked.include? i
+            div class="checkbox red"
+              label for="#{i}" Röd
+              input class="checkbox-seat" type="checkbox" name="seats[]" value="#{i}" id="#{i}"
+        - else
+            div class="checkbox"
+              label for="#{i}" Hej
+              input class="checkbox-seat" type="checkbox" name="seats[]" value="#{i}" id="#{i}"
     button type="submit" Book

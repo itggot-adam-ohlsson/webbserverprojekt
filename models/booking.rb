@@ -36,17 +36,4 @@ class Booking < Model
     @movieId = movieId
   end
 
-  def method_missing(method, *args)
-    result = []
-    if method.to_s.end_with?"s"
-      db = SQLite3::Database.open('db/LoginSystem.sqlite')
-      seats = db.execute("SELECT * FROM #{method} WHERE #{self.class.to_s.downcase}Id = ?", @id)
-      puts seats
-      seats.each do |seat|
-        result << Seat.get(seat[0])
-      end
-    end
-    result
-  end
-
 end

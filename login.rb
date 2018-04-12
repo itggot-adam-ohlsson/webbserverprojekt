@@ -4,7 +4,6 @@ class SFBio < Sinatra::Base
   use Rack::Session::Cookie, :key=> 'rack.session'
 
   get '/' do
-    db = SQLite3::Database.open('db/LoginSystem.sqlite')
     slim :'login/index'
   end
 

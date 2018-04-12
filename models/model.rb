@@ -15,16 +15,21 @@ class Model
     end
   end
 
-  # def method_missing(method, *args)
-  #   result = []
-  #   if method.to_s.end_with?"s"
-  #     db = SQLite3::Database.open('db/LoginSystem.sqlite')
-  #     seats = db.execute("SELECT * FROM #{method} WHERE #{@model_name}_id")
-  #     seats.each do |seat|
-  #       result << Seat.get_or_initialize(seat[0])
-  #     end
-  #   end
-  #   result
-  # end
+  def self.create(items)
+    db = SQLite3::Database.open('db/LoginSystem.sqlite')
+    dbresult = db.execute('INSERT INTO "main"."movies" ("name","genre","duration","seats") VALUES (?,?,?,?)', [name, genre, duration, seats])
+  end
+
+  def method_missing(method, *args)
+    result = []
+    if method.to_s.end_with?"s"
+      db = SQLite3::Database.open('db/LoginSystem.sqlite')
+      seats = db.execute("SELECT * FROM #{method} WHERE #{itself.class.to_s.downcase}Id = ?", @id)
+      seats.each do |seat|
+        result << Seat.get(seat[0])
+      end
+    end
+    result
+  end
 
 end
