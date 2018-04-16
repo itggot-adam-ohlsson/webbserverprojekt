@@ -18,7 +18,10 @@ class Model
 
   def self.hashToModel(dbmodel, items)
     items.keys.length.times do |i|
-      dbmodel.send(items.keys[i].to_s + "=", items.values[i]) unless items.keys[i] == "id"
+      writer = items.keys[i].to_s + "="
+      if dbmodel.respond_to?(writer) && items.keys[i] != "id"
+        dbmodel.send(writer, items.values[i])
+      end
     end
     dbmodel
   end
@@ -51,6 +54,32 @@ class Model
     self.get(id)
   end
 
+  def update(items)
+    fields = []
+    db = SQLite3::Database.open('db/LoginSystem.sqlite')
+    name = self.to_s.downcase
+    item_keys = items.keys.join(",")
+    item_values = (["?"]*items.length).join(",")
+    fields = items.keys.map { |key| "#{key} = ?" }.join(",")
+    db.execute("UPDATE #{itself.class.to_s.downcase}s SET #{fields} WHERE id = ?", items.values + [@id])
+  end
+
+  def self.method_missing(method, *args)
+    result = []
+    if method.to_s.start_with?"get_by_"
+      db = SQLite3::Database.open('db/LoginSystem.sqlite')
+      db.results_as_hash = true
+      dbresult = db.execute("SELECT * FROM #{self.to_s.downcase}s WHERE #{method.to_s.split("_")[-1]} = ?", args)
+      dbresult.each do |items|
+        dbmodel = get_or_initialize(items["id"])
+        result << hashToModel(dbmodel, items)
+      end
+    else
+      raise ArgumentError, "Missing method #{method}"
+    end
+    result
+  end
+
   def method_missing(method, *args)
     result = []
     if method.to_s.end_with?"s"
@@ -59,6 +88,8 @@ class Model
       seats.each do |seat|
         result << Seat.get(seat[0])
       end
+    else
+      raise ArgumentError, "Missing method #{method}"
     end
     result
   end

@@ -31,7 +31,7 @@ class SFBio < Sinatra::Base
   end
 
   get '/profile' do
-    @username = User.get(session[:user]).name
+    @username = User.get(session[:user]).username
     slim :'user/profile'
   end
 
@@ -46,7 +46,6 @@ class SFBio < Sinatra::Base
 
   get '/movies' do
     @movies = Movie.getAll
-    puts @movies[0]
     slim :'sfbio/movies'
   end
 

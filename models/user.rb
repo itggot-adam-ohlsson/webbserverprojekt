@@ -2,7 +2,7 @@ require_relative 'model.rb'
 
 class User < Model
 
-  attr_reader :name
+  attr_accessor :username, :password
 
   @model_name = itself.to_s.downcase
   @model = itself
@@ -12,15 +12,6 @@ class User < Model
     super(id)
   end
 
-  def self.get(id)
-    user = get_or_initialize(id)
-    db = SQLite3::Database.open('db/LoginSystem.sqlite')
-    dbresult = db.execute('SELECT * FROM users WHERE id = ?', id).first
-    user.name = dbresult[1]
-    user.password = dbresult[2]
-    return user
-  end
-
   def changedPassword(ctx, old_password, new_password)
     db = SQLite3::Database.open('db/LoginSystem.sqlite')
 
@@ -28,18 +19,12 @@ class User < Model
       return "/"
     end
 
-    dbresult = db.execute('SELECT * FROM users WHERE id = ?', @id).first
-    unless dbresult == nil
-      dbhash = dbresult[2]
-      passwordhash = BCrypt::Password.new(dbhash)
-      if passwordhash == old_password
-        passwordhash = BCrypt::Password.create(new_password)
-        db.execute('UPDATE users SET password = ? WHERE id = ?', [passwordhash, @id])
-        ctx.session.destroy
-        return "/"
-      else
-        return "/profile"
-      end
+    passwordhash = BCrypt::Password.new(@password)
+    if passwordhash == old_password
+      passwordhash = BCrypt::Password.create(new_password)
+      update("password" => passwordhash)
+      ctx.session.destroy
+      return "/"
     end
   end
 
@@ -51,13 +36,13 @@ class User < Model
     end
 
     passwordhash = BCrypt::Password.create(password)
-    dbresult = db.execute('SELECT * FROM users WHERE username = ?', username)
 
-    if dbresult.length > 0
+    users = get_by_username(username)
+    if users.any?
       return "/register"
     end
 
-    db.execute('INSERT INTO "main"."users" ("username","password") VALUES (?,?)', [username, passwordhash])
+    self.create("username" => username, "password" => passwordhash)
     return "/"
   end
 
@@ -68,13 +53,13 @@ class User < Model
       return "/"
     end
 
-    dbresult = db.execute('SELECT * FROM users WHERE username = ?', username).first
-    unless dbresult == nil
-      dbhash = dbresult[2]
+    users = User.get_by_username(username)
+    if users.any?
+      dbhash = users.first.password
       passwordhash = BCrypt::Password.new(dbhash)
 
       if passwordhash == password
-        ctx.session[:user] = dbresult[0]
+        ctx.session[:user] = users.first.id
         return "/profile"
       end
     end
@@ -84,14 +69,6 @@ class User < Model
   def logout(ctx)
     ctx.session.destroy
     return "/"
-  end
-
-  def name=(name)
-    @name = name
-  end
-
-  def password=(password)
-    @password = password
   end
 
 end
