@@ -13,7 +13,6 @@ class User < Model
   end
 
   def changedPassword(ctx, old_password, new_password)
-    db = SQLite3::Database.open('db/LoginSystem.sqlite')
 
     if old_password.length < 0 || new_password.length < 0
       return "/"
@@ -29,7 +28,6 @@ class User < Model
   end
 
   def self.register(username, password)
-    db = SQLite3::Database.open('db/LoginSystem.sqlite')
 
     unless username.length > 0 && password.length > 0
       return "/register"
@@ -47,7 +45,6 @@ class User < Model
   end
 
   def self.authentication(ctx, username, password)
-    db = SQLite3::Database.open('db/LoginSystem.sqlite')
 
     unless username.length > 0 && password.length > 0
       return "/"

@@ -3,6 +3,10 @@ class SFBio < Sinatra::Base
   #enable :sessions
   use Rack::Session::Cookie, :key=> 'rack.session'
 
+  before do
+    $db = ConnectionPool.instance.obtain
+  end
+
   get '/' do
     slim :'login/index'
   end
@@ -78,5 +82,9 @@ class SFBio < Sinatra::Base
       @seats << seat.seatNr
     end
     slim :'sfbio/seats'
+  end
+
+  after do
+    ConnectionPool.instance.release($id)
   end
 end
