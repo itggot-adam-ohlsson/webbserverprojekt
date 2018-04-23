@@ -3,8 +3,11 @@ class SFBio < Sinatra::Base
   #enable :sessions
   use Rack::Session::Cookie, :key=> 'rack.session'
 
+  attr_reader :db
+
   before do
-    $db = ConnectionPool.instance.obtain
+    @db = ConnectionPool.instance.obtain
+    puts "Obtain" + @db.to_s
   end
 
   get '/' do
@@ -12,7 +15,7 @@ class SFBio < Sinatra::Base
   end
 
   get '/logout' do
-    redirect_path = User.get(session[:user]).logout(self)
+    redirect_path = User.get(@db, session[:user]).logout(self)
     redirect redirect_path
   end
 
@@ -35,7 +38,7 @@ class SFBio < Sinatra::Base
   end
 
   get '/profile' do
-    @username = User.get(session[:user]).username
+    @username = User.get(@db, session[:user]).username
     slim :'user/profile'
   end
 
@@ -44,38 +47,39 @@ class SFBio < Sinatra::Base
   end
 
   post '/changed' do
-    redirect_path = User.get(session[:user]).changedPassword(self, params["old_password"], params["new_password"])
+    puts @db
+    redirect_path = User.get(@db, session[:user]).changedPassword(self, params["old_password"], params["new_password"])
     redirect redirect_path
   end
 
   get '/movies' do
-    @movies = Movie.getAll
+    @movies = Movie.getAll(@db)
     slim :'sfbio/movies'
   end
 
   get '/movies/:id' do
-    @movie = Movie.get(params["id"])
+    @movie = Movie.get(@db, params["id"])
     slim :'sfbio/movie'
   end
 
   get '/movies/:id/tickets' do
-    @movie = Movie.get(params["id"])
+    @movie = Movie.get(@db, params["id"])
     # Håller på att fixa en sak här så listan gör inget ännu egentligen.
     @booked = [1, 4, 5]
     slim :'sfbio/tickets'
   end
 
   post '/movies/:id/tickets/seats' do
-    booking = Booking.create({"userId" => session[:user], "movieId" => params["id"]})
+    booking = Booking.create(@db, {"userId" => session[:user], "movieId" => params["id"]})
     seatClass = "booked"
     params["seats"].each do |seatNr|
-      Seat.create("bookingId" => booking.id, "seatNr" => seatNr)
+      Seat.create(@db, "bookingId" => booking.id, "seatNr" => seatNr)
     end
     redirect "/movies/#{booking.movieId}/tickets/#{booking.id}"
   end
 
   get '/movies/:id/tickets/:bookingId' do
-    @movie = Movie.get(params["id"])
+    @movie = Movie.get(@db, params["id"])
     booking = Booking.get_or_initialize(params["bookingId"])
     @seats = []
     booking.seats.each do |seat|
@@ -85,6 +89,7 @@ class SFBio < Sinatra::Base
   end
 
   after do
-    ConnectionPool.instance.release($id)
+    ConnectionPool.instance.release(@db)
+    puts "Release" + @db.to_s
   end
 end

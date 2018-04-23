@@ -21,7 +21,7 @@ class User < Model
     passwordhash = BCrypt::Password.new(@password)
     if passwordhash == old_password
       passwordhash = BCrypt::Password.create(new_password)
-      update("password" => passwordhash)
+      update(ctx.db, "password" => passwordhash)
       ctx.session.destroy
       return "/"
     end
@@ -50,7 +50,7 @@ class User < Model
       return "/"
     end
 
-    users = User.get_by_username(username)
+    users = User.get_by_username(ctx.db, username)
     if users.any?
       dbhash = users.first.password
       passwordhash = BCrypt::Password.new(dbhash)
