@@ -2,7 +2,8 @@ require_relative 'model.rb'
 
 class Seat < Model
 
-  attr_accessor :bookingId, :seatNr
+  ATTRS = [:bookingId, :seatNr]
+  attr_accessor(*ATTRS)
 
   @model_name = itself.to_s.downcase
   @model = itself

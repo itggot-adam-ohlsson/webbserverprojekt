@@ -7,7 +7,6 @@ class SFBio < Sinatra::Base
 
   before do
     @db = ConnectionPool.instance.obtain
-    puts "Obtain" + @db.to_s
   end
 
   get '/' do
@@ -29,7 +28,7 @@ class SFBio < Sinatra::Base
   end
 
   post '/register' do
-    redirect_path = User.register(params["username"], params["password"])
+    redirect_path = User.register(@db, params["username"], params["password"])
     redirect redirect_path
   end
 
@@ -47,7 +46,6 @@ class SFBio < Sinatra::Base
   end
 
   post '/changed' do
-    puts @db
     redirect_path = User.get(@db, session[:user]).changedPassword(self, params["old_password"], params["new_password"])
     redirect redirect_path
   end
@@ -63,15 +61,20 @@ class SFBio < Sinatra::Base
   end
 
   get '/movies/:id/tickets' do
+    @booked = []
     @movie = Movie.get(@db, params["id"])
-    # Håller på att fixa en sak här så listan gör inget ännu egentligen.
-    @booked = [1, 4, 5]
+    dbresult = @db.execute("SELECT SeatNr FROM seats WHERE bookingId IN (SELECT id FROM bookings WHERE movieId = ?)", params["id"])
+    dbresult.each do |element|
+    @booked << element.values.first
+    end
+    @movie = Movie.get(@db, params["id"])
+    @movie.seats
+
     slim :'sfbio/tickets'
   end
 
   post '/movies/:id/tickets/seats' do
-    booking = Booking.create(@db, {"userId" => session[:user], "movieId" => params["id"]})
-    seatClass = "booked"
+    booking = Booking.create(@db, {"userId" => session[:user], "movieId" => params["id"], "timestamp" => DateTime.now.to_s})
     params["seats"].each do |seatNr|
       Seat.create(@db, "bookingId" => booking.id, "seatNr" => seatNr)
     end
@@ -79,17 +82,39 @@ class SFBio < Sinatra::Base
   end
 
   get '/movies/:id/tickets/:bookingId' do
+    @username = User.get(@db, session[:user]).username
     @movie = Movie.get(@db, params["id"])
-    booking = Booking.get_or_initialize(params["bookingId"])
+    @booking = Booking.get(@db, params["bookingId"])
     @seats = []
-    booking.seats.each do |seat|
+    @booking.seats.each do |seat|
       @seats << seat.seatNr
     end
+    timestamp = DateTime.parse(@booking.timestamp)
+    @timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
     slim :'sfbio/seats'
+  end
+
+  get '/bookings' do
+    @user = User.get(@db, session[:user])
+    @bookings = @user.bookings
+    puts @bookings[0].user.to_s
+    slim :'user/bookings'
+  end
+
+  get '/bookings/:id' do
+    id = params["id"]
+    @booking = Booking.get(@db, params["id"])
+    @movie = Movie.get(@db, @booking.movieId)
+    @seats = []
+    @booking.seats.each do |seat|
+      @seats << seat.seatNr
+    end
+    timestamp = DateTime.parse(@booking.timestamp)
+    @timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    slim :'user/booking'
   end
 
   after do
     ConnectionPool.instance.release(@db)
-    puts "Release" + @db.to_s
   end
 end

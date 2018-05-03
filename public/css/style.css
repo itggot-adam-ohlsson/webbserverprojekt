@@ -16,28 +16,55 @@ body {
   background-color: #f5f5f5;
 }
 
+.button {
+  padding: 1em 2em;
+  background-color: red;
+  margin-top: 1em;
+  display: flex;
+  color: #fff;
+  border-radius: 3px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
 .checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  margin-top: 10px;
+}
+
+.checkbox-label {
   width: 30px;
   height: 30px;
   background-color: #fff;
-  margin: 0.5em;
+  border-radius: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   opacity: 0.6;
 }
 
-.checkbox-checked {
-  background-color: blue;
-}
-
-.checkbox:hover {
+.checkbox:hover .checkbox-label {
   opacity: 1;
 }
 
 .red {
   background-color: red;
+  opacity: 1;
+  pointer-events: none;
+}
+
+.checkbox:hover .red::after {
+  content: none;
 }
 
 input[type="checkbox"] {
   visibility: hidden;
+}
+
+input[type="checkbox"]:checked ~ .checkbox-label:after {
+  content: "❌"
 }
 
 .onePageWrapper {
@@ -277,6 +304,80 @@ form.tickets-form button {
   display: flex;
   margin: auto;
   padding: 64px 0 64px 0;
+  flex-wrap: wrap;
+  max-width: 450px;
+}
+
+/* MOVIE */
+.movieContent {
+  width: 100%;
+  background-color: white;
+  margin-top: 1em;
+}
+
+.movieContentWrapper {
+  width: 90%;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  padding: 64px 0;
+}
+
+.movieInfoContent {
+  margin-left: 1em;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.movieInfo {
+  display: flex;
+}
+
+.movieInfo p+p::before {
+  content: ", "
+}
+
+.movieInfoContent h1 {
+  font-size: 25px;
+}
+
+.movieInfoContent h2 {
+  font-weight: normal;
+  font-size: 20px;
+}
+
+.movieContentWrapper img {
+  width: 180px;
+  height: 270px;
+}
+
+/* BOOKED */
+div.booked {
+  width: 100%;
+  background-color: white;
+  margin-top: 1em;
+}
+
+div.bookedWrapper {
+  width: 90%;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 64px 0;
+}
+
+div.bookedWrapper h1 {
+  font-size: 50px;
+}
+
+div.bookedWrapper h2 {
+  font-size: 30px;
+  font-weight: normal;
+}
+
+div.bookedWrapper p {
+  font-size: 20px;
 }
 
 /* ----- FOOTER ----- */

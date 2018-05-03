@@ -1,1 +1,25 @@
-h1 Seats #{@seats.join(", ")} booked for #{@movie.name}
+div.wrapper
+  header
+    div.headerWrapper
+      a href="/profile"
+        h1 OHLSSONS BIO
+      h1 #{@movie.name}
+  nav
+    div.navWrapper
+      div.pages
+        a href="/profile" Home
+        a href="/movies" Movies
+        a href="#" Contact
+      div.settings
+        div.settingDropdown
+          h2 Settings
+          div.dropdown
+            a href="/change" Change Password
+            a href="/logout" Logout
+
+
+  div.booked
+    div.bookedWrapper
+      h1 Thanks #{@username},
+      h2 Seat(s) #{@seats.join(", ")} booked for #{@movie.name}
+      p #{@timestamp}

@@ -31,6 +31,21 @@ class Model
     hashToModel(dbmodel, dbresult)
   end
 
+  def self.get_from_keys(db, method, row, keys)
+    dbmodel = get_or_initialize(row[0])
+    if keys.length > 0
+      keys.each do |key|
+        field = db.execute("SELECT * FROM #{key}s WHERE id = ?", row[key.to_s + "Id"])
+        klass = Object.const_get(key.to_s.capitalize)
+        field.each do |row|
+          writer = key.to_s + "="
+          dbmodel.send(writer, klass.get(db, row[0]))
+        end
+      end
+    end
+    hashToModel(dbmodel, row)
+  end
+
   def self.getAll(db)
     db.results_as_hash = true
     dbresult = db.execute("SELECT * FROM #{self.to_s.downcase}s")
@@ -45,7 +60,7 @@ class Model
     item_keys = items.keys.join(",")
     item_values = (["?"]*items.length).join(",")
     dbresult = db.execute("INSERT INTO #{name}s (#{item_keys}) VALUES (#{item_values})", items.values)
-    id = db.execute('SELECT last_insert_rowid();').first.first
+    id = db.execute('SELECT last_insert_rowid();').first[0]
     self.get(db, id)
   end
 
@@ -58,16 +73,27 @@ class Model
     db.execute("UPDATE #{itself.class.to_s.downcase}s SET #{fields} WHERE id = ?", items.values + [@id])
   end
 
+  def foreign_keys(model)
+    keys = []
+    model::ATTRS.each do |attr|
+      if attr.to_s.end_with?("Id")
+        keys << attr.to_s.chomp("Id")
+      end
+    end
+    keys
+  end
+
   def self.method_missing(method, *args)
-    db = args.shift
     result = []
     if method.to_s.start_with?"get_by_"
+      db = ConnectionPool.instance.obtain
       db.results_as_hash = true
       dbresult = db.execute("SELECT * FROM #{self.to_s.downcase}s WHERE #{method.to_s.split("_")[-1]} = ?", args)
       dbresult.each do |items|
         dbmodel = get_or_initialize(items["id"])
         result << hashToModel(dbmodel, items)
       end
+      ConnectionPool.instance.release(db)
     else
       raise ArgumentError, "Missing method #{method}"
     end
@@ -75,13 +101,17 @@ class Model
   end
 
   def method_missing(method, *args)
-    db = args.shift
     result = []
     if method.to_s.end_with?"s"
-      seats = db.execute("SELECT * FROM #{method} WHERE #{itself.class.to_s.downcase}Id = ?", @id)
-      seats.each do |seat|
-        result << Seat.get(seat[0])
+      keys = foreign_keys(Object.const_get(method.to_s.chomp('s').capitalize))
+      db = ConnectionPool.instance.obtain
+      db.results_as_hash = true
+      field = db.execute("SELECT * FROM #{method} WHERE #{itself.class.to_s.downcase}Id = ?", @id)
+      klass = Object.const_get(method.to_s.chomp('s').capitalize)
+      field.each do |row|
+        result << klass.get_from_keys(db, method, row, keys)
       end
+      ConnectionPool.instance.release(db)
     else
       raise ArgumentError, "Missing method #{method}"
     end

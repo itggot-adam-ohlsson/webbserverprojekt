@@ -16,12 +16,10 @@ class ConnectionPool
   end
 
   def obtain
-    puts @pool.length
     @pool.pop
   end
 
   def release(object)
-    puts object.inspect
     @pool << object
   end
 end

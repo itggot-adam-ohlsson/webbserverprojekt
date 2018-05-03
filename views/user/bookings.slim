@@ -3,7 +3,7 @@ div.wrapper
     div.headerWrapper
       a href="/profile"
         h1 OHLSSONS BIO
-      h1 MOVIES
+      h1 #{@user.username}
   nav
     div.navWrapper
       div.pages
@@ -16,15 +16,11 @@ div.wrapper
           div.dropdown
             a href="/change" Change Password
             a href="/logout" Logout
-  div.moviesSection
-    div.moviesWrapper
-      div.movies
-        - for i in 0..@movies.length-1
-          div.movie
-            a href="movies/#{@movies[i].id}"
-              img src="img/#{@movies[i].img}.jpg" alt="#{@movies[i].name}"
-              h1 #{@movies[i].id}. #{@movies[i].name}
-            hr
-footer
-  div.footerWrapper
-    h1 &copy; Google BIO 2018
+
+
+  div.booked
+    div.bookedWrapper
+      -@bookings.each do |booking|
+        div.booking
+          a href="/bookings/#{booking.id}"
+            p #{booking.movie.name}

@@ -2,7 +2,8 @@ require_relative 'model.rb'
 
 class Booking < Model
 
-  attr_accessor :userId, :movieId
+  ATTRS = [:userId, :movieId, :timestamp, :movie, :user]
+  attr_accessor(*ATTRS)
 
   @model_name = itself.to_s.downcase
   @model = itself

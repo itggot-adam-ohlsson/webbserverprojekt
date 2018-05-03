@@ -2,7 +2,7 @@ div.wrapper
   header
     div.headerWrapper
       a href="/profile"
-        h1 Google BIO
+        h1 OHLSSONS BIO
       h1 #{@movie.name}
   nav
     div.navWrapper
@@ -17,4 +17,17 @@ div.wrapper
             a href="/change" Change Password
             a href="/logout" Logout
 
-  a href="/movies/#{@movie.id}/tickets" Tickets
+            / h2 Genre: #{@movies[i][2}
+            / h3 Seats left: #{@movies[i][4]}
+            / p Duration: #{@movies[i][3]} minutes
+
+  div.movieContent
+    div.movieContentWrapper
+      img src="/img/#{@movie.img}.jpg" alt="#{@movie.name}"
+      div.movieInfoContent
+        h1 #{@movie.name}
+        div.movieInfo
+          p #{@movie.genre}
+          p #{@movie.duration} minutes
+          p #{@movie.seats} seats left
+        a class="button" href="/movies/#{@movie.id}/tickets" Tickets

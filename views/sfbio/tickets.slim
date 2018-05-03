@@ -2,7 +2,7 @@ div.wrapper
   header
     div.headerWrapper
       a href="/profile"
-        h1 Google BIO
+        h1 OHLSSONS BIO
       h1 MOVIES
   nav
     div.navWrapper
@@ -17,19 +17,21 @@ div.wrapper
             a href="/change" Change Password
             a href="/logout" Logout
 
-  h1 #{@movie.name}
-  h2 Pick seats for #{@movie.name}
+  div.movieContent
+    div.movieContentWrapper
+      div.movieInfoContent
+        h1 #{@movie.name}
+        h2 Pick seats for #{@movie.name}
 
-  // Håller på att fixa en sak här!!
   form class="tickets-form" action="/movies/#{@movie.id}/tickets/seats" method="post"
     div class="seats"
       - @movie.seats.times do |i|
         - if @booked.include? i
-            div class="checkbox red"
-              label for="#{i}" Röd
+            div class="checkbox"
               input class="checkbox-seat" type="checkbox" name="seats[]" value="#{i}" id="#{i}"
+              label class="checkbox-label red" for="#{i}"
         - else
             div class="checkbox"
-              label for="#{i}" Hej
               input class="checkbox-seat" type="checkbox" name="seats[]" value="#{i}" id="#{i}"
+              label class="checkbox-label" for="#{i}"
     button type="submit" Book

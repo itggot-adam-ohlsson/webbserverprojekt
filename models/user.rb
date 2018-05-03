@@ -2,11 +2,13 @@ require_relative 'model.rb'
 
 class User < Model
 
-  attr_accessor :username, :password
+  ATTRS = [:username, :password]
+  attr_accessor(*ATTRS)
 
   @model_name = itself.to_s.downcase
   @model = itself
   @modelsById = Hash.new
+  @bookings = :bookings
 
   def initialize(id)
     super(id)
@@ -27,7 +29,7 @@ class User < Model
     end
   end
 
-  def self.register(username, password)
+  def self.register(db, username, password)
 
     unless username.length > 0 && password.length > 0
       return "/register"
@@ -40,7 +42,7 @@ class User < Model
       return "/register"
     end
 
-    self.create("username" => username, "password" => passwordhash)
+    self.create(db, "username" => username, "password" => passwordhash)
     return "/"
   end
 
@@ -50,7 +52,7 @@ class User < Model
       return "/"
     end
 
-    users = User.get_by_username(ctx.db, username)
+    users = User.get_by_username(username)
     if users.any?
       dbhash = users.first.password
       passwordhash = BCrypt::Password.new(dbhash)
