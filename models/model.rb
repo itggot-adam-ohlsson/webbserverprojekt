@@ -31,16 +31,14 @@ class Model
     hashToModel(dbmodel, dbresult)
   end
 
-  def self.get_from_keys(db, method, row, keys)
+  def self.get_from_keys(row, keys)
     dbmodel = get_or_initialize(row[0])
     if keys.length > 0
       keys.each do |key|
-        field = db.execute("SELECT * FROM #{key}s WHERE id = ?", row[key.to_s + "Id"])
         klass = Object.const_get(key.to_s.capitalize)
-        field.each do |row|
-          writer = key.to_s + "="
-          dbmodel.send(writer, klass.get(db, row[0]))
-        end
+        dbmodel.class.module_eval { attr_accessor key }
+        writer = key.to_s + "="
+        dbmodel.send(writer, klass.get_from_keys(row, []))
       end
     end
     hashToModel(dbmodel, row)
@@ -106,10 +104,16 @@ class Model
       keys = foreign_keys(Object.const_get(method.to_s.chomp('s').capitalize))
       db = ConnectionPool.instance.obtain
       db.results_as_hash = true
-      field = db.execute("SELECT * FROM #{method} WHERE #{itself.class.to_s.downcase}Id = ?", @id)
+      if keys.length > 0
+          all_keys = keys.map{|key|"#{key}s"}.join(",")
+          all_values = keys.map{|key|"m.#{key}Id = #{key}s.id"}.join(" OR ")
+          field = db.execute("SELECT * FROM #{method} m INNER JOIN #{all_keys} ON #{all_values} WHERE #{itself.class.to_s.downcase}Id = ?", @id)
+      else
+          field = db.execute("SELECT * FROM #{method} WHERE #{itself.class.to_s.downcase}Id = ?", @id)
+      end
       klass = Object.const_get(method.to_s.chomp('s').capitalize)
       field.each do |row|
-        result << klass.get_from_keys(db, method, row, keys)
+        result << klass.get_from_keys(row, keys)
       end
       ConnectionPool.instance.release(db)
     else
