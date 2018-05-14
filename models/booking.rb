@@ -2,10 +2,9 @@ require_relative 'model.rb'
 
 class Booking < Model
 
-  ATTRS = [:userId, :movieId, :timestamp, :movie, :user]
+  ATTRS = [:userId, :movieId, :timestamp]
   attr_accessor(*ATTRS)
 
-  @model_name = itself.to_s.downcase
   @model = itself
   @modelsById = Hash.new
 

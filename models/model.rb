@@ -14,7 +14,7 @@ class Model
     end
   end
 
-  def self.hashToModel(dbmodel, items)
+  def self.hash_to_model(dbmodel, items)
     items.keys.length.times do |i|
       writer = items.keys[i].to_s + "="
       if dbmodel.respond_to?(writer) && items.keys[i] != "id"
@@ -24,15 +24,37 @@ class Model
     dbmodel
   end
 
-  def self.get(db, id)
-    dbmodel = get_or_initialize(id)
+  def self.get_from_model(db, klass, where)
+    if where.length > 0
+      where_keys = where.keys.map{|key|"#{key} = ?"}.join(" AND ")
+      where_clause = " WHERE #{where_keys}"
+    else
+      where_clause = ""
+    end
+
+    get_from_model_where(db, klass, where_clause, where.values)
+  end
+
+  def self.get_from_model_where(db, klass, where_clause, where_values)
+    model_name = klass.to_s.downcase
     db.results_as_hash = true
-    dbresult = db.execute("SELECT * FROM #{self.to_s.downcase}s WHERE id = ?", id).first
-    hashToModel(dbmodel, dbresult)
+    keys = foreign_keys(klass)
+    mid = "m.id AS #{model_name}Mid"
+    if keys.length > 0
+        all_ids = (keys.map{|key|"#{key}s.id AS #{key}Mid"} + [mid]).join(",")
+        all_keys = keys.map{|key|"#{key}s"}.join(",")
+        all_values = keys.map{|key|"m.#{key}Id = #{key}s.id"}.join(" AND ")
+        rows = db.execute("SELECT #{all_ids}, * FROM #{model_name}s m INNER JOIN #{all_keys} ON #{all_values} #{where_clause}", where_values)
+    else
+        rows = db.execute("SELECT #{mid}, * FROM #{model_name}s m #{where_clause}", where_values)
+    end
+
+    return rows, keys
   end
 
   def self.get_from_keys(row, keys)
-    dbmodel = get_or_initialize(row[0])
+    mid = row["#{self.to_s.downcase}Mid"]
+    dbmodel = get_or_initialize(mid)
     if keys.length > 0
       keys.each do |key|
         klass = Object.const_get(key.to_s.capitalize)
@@ -41,16 +63,29 @@ class Model
         dbmodel.send(writer, klass.get_from_keys(row, []))
       end
     end
-    hashToModel(dbmodel, row)
+    hash_to_model(dbmodel, row)
   end
 
-  def self.getAll(db)
-    db.results_as_hash = true
-    dbresult = db.execute("SELECT * FROM #{self.to_s.downcase}s")
-    dbresult.map do |items|
-      dbmodel = get_or_initialize(items["id"])
-      hashToModel(dbmodel, items)
-    end
+  def self.get_all(db)
+    rows, keys = get_from_model(db, self, {})
+    rows.map{|row|get_from_keys(row, keys)}
+  end
+
+  def self.get(db, id)
+    rows, keys = get_from_model(db, self, {"m.id" => id})
+    get_from_keys(rows.first, keys)
+  end
+
+  def self.get_through(db, klass, model)
+    model_name = klass.to_s.downcase
+    rows, keys = get_from_model_where(db, self, "WHERE #{model_name}Id IN (SELECT id FROM #{model_name}s WHERE #{model.class.to_s.downcase}Id = ?)", model.id)
+    rows.map{|row|get_from_keys(row, keys)}
+  end
+
+  def self.count_through(db, klass, model)
+    model_name = klass.to_s.downcase
+    rows = db.execute("SELECT COUNT(*) FROM #{self.to_s.downcase}s WHERE #{model_name}Id IN (SELECT id FROM #{model_name}s WHERE #{model.class.to_s.downcase}Id = ?)", model.id)
+    rows.first[0]
   end
 
   def self.create(db, items)
@@ -71,7 +106,7 @@ class Model
     db.execute("UPDATE #{itself.class.to_s.downcase}s SET #{fields} WHERE id = ?", items.values + [@id])
   end
 
-  def foreign_keys(model)
+  def self.foreign_keys(model)
     keys = []
     model::ATTRS.each do |attr|
       if attr.to_s.end_with?("Id")
@@ -85,13 +120,9 @@ class Model
     result = []
     if method.to_s.start_with?"get_by_"
       db = ConnectionPool.instance.obtain
-      db.results_as_hash = true
-      dbresult = db.execute("SELECT * FROM #{self.to_s.downcase}s WHERE #{method.to_s.split("_")[-1]} = ?", args)
-      dbresult.each do |items|
-        dbmodel = get_or_initialize(items["id"])
-        result << hashToModel(dbmodel, items)
-      end
+      rows, keys = get_from_model(db, self, {"m.#{method.to_s.split("_")[-1]}" => args.first})
       ConnectionPool.instance.release(db)
+      result = rows.map{|row|get_from_keys(row, keys)}
     else
       raise ArgumentError, "Missing method #{method}"
     end
@@ -101,21 +132,11 @@ class Model
   def method_missing(method, *args)
     result = []
     if method.to_s.end_with?"s"
-      keys = foreign_keys(Object.const_get(method.to_s.chomp('s').capitalize))
-      db = ConnectionPool.instance.obtain
-      db.results_as_hash = true
-      if keys.length > 0
-          all_keys = keys.map{|key|"#{key}s"}.join(",")
-          all_values = keys.map{|key|"m.#{key}Id = #{key}s.id"}.join(" OR ")
-          field = db.execute("SELECT * FROM #{method} m INNER JOIN #{all_keys} ON #{all_values} WHERE #{itself.class.to_s.downcase}Id = ?", @id)
-      else
-          field = db.execute("SELECT * FROM #{method} WHERE #{itself.class.to_s.downcase}Id = ?", @id)
-      end
       klass = Object.const_get(method.to_s.chomp('s').capitalize)
-      field.each do |row|
-        result << klass.get_from_keys(row, keys)
-      end
+      db = ConnectionPool.instance.obtain
+      rows, keys = itself.class.get_from_model(db, klass, {"#{itself.class.to_s.downcase}Id" => @id})
       ConnectionPool.instance.release(db)
+      result = rows.map{|row|klass.get_from_keys(row, keys)}
     else
       raise ArgumentError, "Missing method #{method}"
     end

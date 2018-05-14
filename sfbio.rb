@@ -51,30 +51,28 @@ class SFBio < Sinatra::Base
   end
 
   get '/movies' do
-    @movies = Movie.getAll(@db)
+    @movies = Movie.get_all(@db)
     slim :'sfbio/movies'
   end
 
   get '/movies/:id' do
     @movie = Movie.get(@db, params["id"])
+    @booked = Seat.count_through(@db, Booking, @movie)
     slim :'sfbio/movie'
   end
 
   get '/movies/:id/tickets' do
-    @booked = []
     @movie = Movie.get(@db, params["id"])
-    dbresult = @db.execute("SELECT SeatNr FROM seats WHERE bookingId IN (SELECT id FROM bookings WHERE movieId = ?)", params["id"])
-    dbresult.each do |element|
-    @booked << element.values.first
-    end
-    @movie = Movie.get(@db, params["id"])
-    @movie.seats
-
+    @seats = Seat.get_through(@db, Booking, @movie)
+    @booked = @seats.map{|seat| seat.seatNr}
     slim :'sfbio/tickets'
   end
 
   post '/movies/:id/tickets/seats' do
     booking = Booking.create(@db, {"userId" => session[:user], "movieId" => params["id"], "timestamp" => DateTime.now.to_s})
+    if params["seats"] == nil
+      redirect "/movies"
+    end
     params["seats"].each do |seatNr|
       Seat.create(@db, "bookingId" => booking.id, "seatNr" => seatNr)
     end
@@ -82,35 +80,22 @@ class SFBio < Sinatra::Base
   end
 
   get '/movies/:id/tickets/:bookingId' do
-    @username = User.get(@db, session[:user]).username
-    @movie = Movie.get(@db, params["id"])
     @booking = Booking.get(@db, params["bookingId"])
-    @seats = []
-    @booking.seats.each do |seat|
-      @seats << seat.seatNr
-    end
-    timestamp = DateTime.parse(@booking.timestamp)
-    @timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    @seats = @booking.seats.map{|seat|seat.seatNr}
+    @timestamp = DateTime.parse(@booking.timestamp).strftime('%Y-%m-%d %H:%M:%S')
     slim :'sfbio/seats'
   end
 
   get '/bookings' do
     @user = User.get(@db, session[:user])
     @bookings = @user.bookings
-    puts @bookings[0].user.to_s
     slim :'user/bookings'
   end
 
   get '/bookings/:id' do
-    id = params["id"]
     @booking = Booking.get(@db, params["id"])
-    @movie = Movie.get(@db, @booking.movieId)
-    @seats = []
-    @booking.seats.each do |seat|
-      @seats << seat.seatNr
-    end
-    timestamp = DateTime.parse(@booking.timestamp)
-    @timestamp = timestamp.strftime('%Y-%m-%d %H:%M:%S')
+    @seats = @booking.seats.map{|seat|seat.seatNr}
+    @timestamp = DateTime.parse(@booking.timestamp).strftime('%Y-%m-%d %H:%M:%S')
     slim :'user/booking'
   end
 

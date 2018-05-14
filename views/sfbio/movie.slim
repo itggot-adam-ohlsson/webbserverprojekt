@@ -17,11 +17,6 @@ div.wrapper
             a href="/bookings" Bookings
             a href="/change" Change Password
             a href="/logout" Logout
-
-            / h2 Genre: #{@movies[i][2}
-            / h3 Seats left: #{@movies[i][4]}
-            / p Duration: #{@movies[i][3]} minutes
-
   div.movieContent
     div.movieContentWrapper
       img src="/img/#{@movie.img}.jpg" alt="#{@movie.name}"
@@ -30,5 +25,5 @@ div.wrapper
         div.movieInfo
           p #{@movie.genre}
           p #{@movie.duration} minutes
-          p #{@movie.seats} seats left
+          p #{@movie.seats - @booked} seats left
         a class="button" href="/movies/#{@movie.id}/tickets" Tickets

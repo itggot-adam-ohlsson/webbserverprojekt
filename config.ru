@@ -9,7 +9,7 @@ dirs.each do |dir|
 end
 
 require_relative 'pool.rb'
-require_relative 'login.rb'
+require_relative 'sfbio.rb'
 
 use Rack::MethodOverride
 

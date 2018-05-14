@@ -5,10 +5,8 @@ class User < Model
   ATTRS = [:username, :password]
   attr_accessor(*ATTRS)
 
-  @model_name = itself.to_s.downcase
   @model = itself
   @modelsById = Hash.new
-  @bookings = :bookings
 
   def initialize(id)
     super(id)
