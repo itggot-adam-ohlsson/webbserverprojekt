@@ -369,6 +369,7 @@ div.bookedWrapper {
 
 div.bookedWrapper h1 {
   font-size: 50px;
+  color: #30db3b;
 }
 
 div.bookedWrapper h2 {
@@ -378,6 +379,35 @@ div.bookedWrapper h2 {
 
 div.bookedWrapper p {
   font-size: 20px;
+}
+
+/* WELCOME */
+div.welcome {
+  width: 100%;
+  background-color: white;
+  margin-top: 1em;
+}
+
+div.welcomeWrapper {
+  width: 90%;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 64px 0;
+}
+
+div.welcomeWrapper img {
+  width: 400px;
+}
+
+div.welcomeWrapper h1 {
+  font-size: 50px;
+}
+
+div.welcomeWrapper p {
+  font-size: 30px;
+  max-width: 700px;
 }
 
 /* ----- FOOTER ----- */
