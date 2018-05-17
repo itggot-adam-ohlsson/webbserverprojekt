@@ -1,7 +1,7 @@
 class SFBio < Sinatra::Base
 
-  #enable :sessions
-  use Rack::Session::Cookie, :key=> 'rack.session'
+  enable :sessions
+  #use Rack::Session::Cookie, :key=> 'rack.session'
 
   attr_reader :db
 
@@ -13,9 +13,8 @@ class SFBio < Sinatra::Base
     slim :'login/index'
   end
 
-  get '/logout' do
-    redirect_path = User.get(@db, session[:user]).logout(self)
-    redirect redirect_path
+  get '/register' do
+    slim :'register/register'
   end
 
   post '/authentication' do
@@ -23,26 +22,45 @@ class SFBio < Sinatra::Base
     redirect redirect_path
   end
 
-  get '/register' do
-    slim :'register/register'
-  end
-
   post '/register' do
     redirect_path = User.register(@db, params["username"], params["password"])
     redirect redirect_path
   end
 
+  #make secured
+
   get '/registered' do
-    slim :'register/registered'
+    if session[:user]
+      slim :'register/registered'
+    else
+      redirect "/"
+    end
+  end
+
+  get '/logout' do
+    if session[:user]
+      redirect_path = User.get(@db, session[:user]).logout(self)
+      redirect redirect_path
+    else
+      redirect "/"
+    end
   end
 
   get '/profile' do
-    @username = User.get(@db, session[:user]).username
-    slim :'user/profile'
+    if session[:user]
+      @username = User.get(@db, session[:user]).username
+      slim :'user/profile'
+    else
+      redirect "/"
+    end
   end
 
   get '/change' do
-    slim :'user/change'
+    if session[:user]
+      slim :'user/change'
+    else
+      redirect "/"
+    end
   end
 
   post '/changed' do
@@ -51,21 +69,33 @@ class SFBio < Sinatra::Base
   end
 
   get '/movies' do
-    @movies = Movie.get_all(@db)
-    slim :'sfbio/movies'
+    if session[:user]
+      @movies = Movie.get_all(@db)
+      slim :'sfbio/movies'
+    else
+      redirect "/"
+    end
   end
 
   get '/movies/:id' do
-    @movie = Movie.get(@db, params["id"])
-    @booked = Seat.count_through(@db, Booking, @movie)
-    slim :'sfbio/movie'
+    if session[:user]
+      @movie = Movie.get(@db, params["id"])
+      @booked = Seat.count_through(@db, Booking, @movie)
+      slim :'sfbio/movie'
+    else
+      redirect "/"
+    end
   end
 
   get '/movies/:id/tickets' do
-    @movie = Movie.get(@db, params["id"])
-    @seats = Seat.get_through(@db, Booking, @movie)
-    @booked = @seats.map{|seat| seat.seatNr}
-    slim :'sfbio/tickets'
+    if session[:user]
+      @movie = Movie.get(@db, params["id"])
+      @seats = Seat.get_through(@db, Booking, @movie)
+      @booked = @seats.map{|seat| seat.seatNr}
+      slim :'sfbio/tickets'
+    else
+      redirect "/"
+    end
   end
 
   post '/movies/:id/tickets/seats' do
@@ -78,23 +108,35 @@ class SFBio < Sinatra::Base
   end
 
   get '/movies/:id/tickets/:bookingId' do
-    @booking = Booking.get(@db, params["bookingId"])
-    @seats = @booking.seats.map{|seat|seat.seatNr}
-    @timestamp = DateTime.parse(@booking.timestamp).strftime('%Y-%m-%d %H:%M:%S')
-    slim :'sfbio/seats'
+    if session[:user]
+      @booking = Booking.get(@db, params["bookingId"])
+      @seats = @booking.seats.map{|seat|seat.seatNr}
+      @timestamp = DateTime.parse(@booking.timestamp).strftime('%Y-%m-%d %H:%M:%S')
+      slim :'sfbio/seats'
+    else
+      redirect "/"
+    end
   end
 
   get '/bookings' do
-    @user = User.get(@db, session[:user])
-    @bookings = @user.bookings
-    slim :'user/bookings'
+    if session[:user]
+      @user = User.get(@db, session[:user])
+      @bookings = @user.bookings
+      slim :'user/bookings'
+    else
+      redirect "/"
+    end
   end
 
   get '/bookings/:id' do
-    @booking = Booking.get(@db, params["id"])
-    @seats = @booking.seats.map{|seat|seat.seatNr}
-    @timestamp = DateTime.parse(@booking.timestamp).strftime('%Y-%m-%d %H:%M:%S')
-    slim :'user/booking'
+    if session[:user]
+      @booking = Booking.get(@db, params["id"])
+      @seats = @booking.seats.map{|seat|seat.seatNr}
+      @timestamp = DateTime.parse(@booking.timestamp).strftime('%Y-%m-%d %H:%M:%S')
+      slim :'user/booking'
+    else
+      redirect "/"
+    end
   end
 
   after do
