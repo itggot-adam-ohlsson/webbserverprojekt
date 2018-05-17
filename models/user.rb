@@ -8,6 +8,7 @@ class User < Model
   @model = itself
   @modelsById = Hash.new
 
+  public
   def changedPassword(ctx, old_password, new_password)
 
     if old_password.length < 0 || new_password.length < 0
@@ -23,6 +24,7 @@ class User < Model
     end
   end
 
+  private
   def self.register(db, username, password)
 
     unless username.length > 0 && password.length > 0
@@ -59,6 +61,7 @@ class User < Model
     return "/"
   end
 
+  public
   def logout(ctx)
     ctx.session.destroy
     return "/"

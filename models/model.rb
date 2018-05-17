@@ -5,6 +5,7 @@ class Model
     @id = id
   end
 
+  private
   # Denna metoden hämtar/sparar model av id som hör ihop med id.
   def self.get_or_initialize(id)
     if @modelsById.include? id
