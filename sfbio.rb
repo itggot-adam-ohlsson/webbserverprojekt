@@ -70,9 +70,7 @@ class SFBio < Sinatra::Base
 
   post '/movies/:id/tickets/seats' do
     booking = Booking.create(@db, {"userId" => session[:user], "movieId" => params["id"], "timestamp" => DateTime.now.to_s})
-    if params["seats"] == nil
-      redirect "/movies"
-    end
+    redirect "/movies" if params["seast"] == nil
     params["seats"].each do |seatNr|
       Seat.create(@db, "bookingId" => booking.id, "seatNr" => seatNr)
     end

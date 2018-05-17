@@ -116,14 +116,22 @@ class Model
     keys
   end
 
-  def method_missing(method, *args)
+  def self.method_missing(method, *args)
     result = []
     if method.to_s.start_with?"get_by_"
       db = ConnectionPool.instance.obtain
       rows, keys = get_from_model(db, self, {"m.#{method.to_s.split("_")[-1]}" => args.first})
       ConnectionPool.instance.release(db)
       result = rows.map{|row|get_from_keys(row, keys)}
-    elsif method.to_s.end_with?"s"
+    else
+      raise ArgumentError, "Missing method #{method}"
+    end
+    result
+  end
+
+  def method_missing(method, *args)
+    result = []
+    if method.to_s.end_with?"s"
       klass = Object.const_get(method.to_s.chomp('s').capitalize)
       db = ConnectionPool.instance.obtain
       rows, keys = itself.class.get_from_model(db, klass, {"#{itself.class.to_s.downcase}Id" => @id})

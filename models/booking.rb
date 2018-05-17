@@ -7,5 +7,4 @@ class Booking < Model
 
   @model = itself
   @modelsById = Hash.new
-
 end

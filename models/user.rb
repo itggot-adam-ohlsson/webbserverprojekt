@@ -46,7 +46,7 @@ class User < Model
       return "/"
     end
 
-    users = User.get_by_username(username)
+    users = get_by_username(username)
     if users.any?
       dbhash = users.first.password
       passwordhash = BCrypt::Password.new(dbhash)
