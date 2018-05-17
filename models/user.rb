@@ -8,10 +8,6 @@ class User < Model
   @model = itself
   @modelsById = Hash.new
 
-  def initialize(id)
-    super(id)
-  end
-
   def changedPassword(ctx, old_password, new_password)
 
     if old_password.length < 0 || new_password.length < 0

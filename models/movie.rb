@@ -7,8 +7,4 @@ class Movie < Model
 
   @model = itself
   @modelsById = Hash.new
-
-  def initialize(id)
-    super(id)
-  end
 end
