@@ -21,5 +21,7 @@ div.wrapper
 
   div.booked
     div.bookedWrapper
+      - if flash[:notify]
+          h1 = flash[:notify]
       h2 Seat(s) #{@seats.join(", ")} booked for #{@booking.movie.name}
       p #{@timestamp}

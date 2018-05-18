@@ -1,12 +1,17 @@
 class SFBio < Sinatra::Base
 
-  enable :sessions
-  #use Rack::Session::Cookie, :key=> 'rack.session'
+  #enable :sessions
+  register Sinatra::Flash
+  use Rack::Session::Cookie, :key=> 'rack.session'
 
   attr_reader :db
 
   before do
     @db = ConnectionPool.instance.obtain
+
+    if !['register', 'authentication', nil].include?(request.path_info.split('/')[1]) && !session[:user]
+      redirect "/"
+    end
   end
 
   get '/' do
@@ -27,40 +32,22 @@ class SFBio < Sinatra::Base
     redirect redirect_path
   end
 
-  #make secured
-
   get '/registered' do
-    if session[:user]
-      slim :'register/registered'
-    else
-      redirect "/"
-    end
+    slim :'register/registered'
   end
 
   get '/logout' do
-    if session[:user]
-      redirect_path = User.get(@db, session[:user]).logout(self)
-      redirect redirect_path
-    else
-      redirect "/"
-    end
+    redirect_path = User.get(@db, session[:user]).logout(self)
+    redirect redirect_path
   end
 
   get '/profile' do
-    if session[:user]
-      @username = User.get(@db, session[:user]).username
-      slim :'user/profile'
-    else
-      redirect "/"
-    end
+    @username = User.get(@db, session[:user]).username
+    slim :'user/profile'
   end
 
   get '/change' do
-    if session[:user]
-      slim :'user/change'
-    else
-      redirect "/"
-    end
+    slim :'user/change'
   end
 
   post '/changed' do
@@ -69,74 +56,44 @@ class SFBio < Sinatra::Base
   end
 
   get '/movies' do
-    if session[:user]
-      @movies = Movie.get_all(@db)
-      slim :'sfbio/movies'
-    else
-      redirect "/"
-    end
+    @movies = Movie.get_all(@db)
+    slim :'sfbio/movies'
   end
 
   get '/movies/:id' do
-    if session[:user]
-      @movie = Movie.get(@db, params["id"])
-      @booked = Seat.count_through(@db, Booking, @movie)
-      slim :'sfbio/movie'
-    else
-      redirect "/"
-    end
+    @movie = Movie.get(@db, params["id"])
+    @booked = Seat.count_through(@db, Booking, @movie)
+    slim :'sfbio/movie'
   end
 
   get '/movies/:id/tickets' do
-    if session[:user]
-      @movie = Movie.get(@db, params["id"])
-      @seats = Seat.get_through(@db, Booking, @movie)
-      @booked = @seats.map{|seat| seat.seatNr}
-      slim :'sfbio/tickets'
-    else
-      redirect "/"
-    end
+    @movie = Movie.get(@db, params["id"])
+    @seats = Seat.get_through(@db, Booking, @movie)
+    @booked = @seats.map{|seat| seat.seatNr}
+    slim :'sfbio/tickets'
   end
 
   post '/movies/:id/tickets/seats' do
-    booking = Booking.create(@db, {"userId" => session[:user], "movieId" => params["id"], "timestamp" => DateTime.now.to_s})
     return redirect "/movies" if params["seats"] == nil
+    booking = Booking.create(@db, {"userId" => session[:user], "movieId" => params["id"]})
     params["seats"].each do |seatNr|
       Seat.create(@db, "bookingId" => booking.id, "seatNr" => seatNr)
     end
-    redirect "/movies/#{booking.movieId}/tickets/#{booking.id}"
-  end
-
-  get '/movies/:id/tickets/:bookingId' do
-    if session[:user]
-      @booking = Booking.get(@db, params["bookingId"])
-      @seats = @booking.seats.map{|seat|seat.seatNr}
-      @timestamp = DateTime.parse(@booking.timestamp).strftime('%Y-%m-%d %H:%M:%S')
-      slim :'sfbio/seats'
-    else
-      redirect "/"
-    end
+    flash[:notify] = "Thanks for booking #{booking.user.username}!"
+    redirect "/bookings/#{booking.id}"
   end
 
   get '/bookings' do
-    if session[:user]
-      @user = User.get(@db, session[:user])
-      @bookings = @user.bookings
-      slim :'user/bookings'
-    else
-      redirect "/"
-    end
+    @user = User.get(@db, session[:user])
+    @bookings = @user.bookings
+    slim :'user/bookings'
   end
 
   get '/bookings/:id' do
-    if session[:user]
-      @booking = Booking.get(@db, params["id"])
-      @seats = @booking.seats.map{|seat|seat.seatNr}
-      @timestamp = DateTime.parse(@booking.timestamp).strftime('%Y-%m-%d %H:%M:%S')
-      slim :'user/booking'
-    else
-      redirect "/"
-    end
+    @booking = Booking.get(@db, params["id"])
+    @seats = @booking.seats.map{|seat|seat.seatNr}
+    @timestamp = DateTime.parse(@booking.timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    slim :'user/booking'
   end
 
   after do

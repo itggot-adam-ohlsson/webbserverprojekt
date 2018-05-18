@@ -5,6 +5,4 @@ class Movie < Model
   ATTRS = [:name, :genre, :duration, :seats, :img]
   attr_accessor(*ATTRS)
 
-  @model = itself
-  @modelsById = Hash.new
 end

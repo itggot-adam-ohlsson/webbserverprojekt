@@ -5,9 +5,6 @@ class User < Model
   ATTRS = [:username, :password]
   attr_accessor(*ATTRS)
 
-  @model = itself
-  @modelsById = Hash.new
-
   public
   def changedPassword(ctx, old_password, new_password)
 

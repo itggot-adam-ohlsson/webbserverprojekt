@@ -5,16 +5,17 @@ class Model
     @id = id
   end
 
-  private
   # Denna metoden hämtar/sparar model av id som hör ihop med id.
   def self.get_or_initialize(id)
+    @modelsById = @modelsById || Hash.new
     if @modelsById.include? id
       @modelsById[id]
     else
-      @modelsById[id] = @model.new(id)
+      @modelsById[id] = itself.new(id)
     end
   end
 
+  private
   def self.hash_to_model(dbmodel, items)
     items.keys.length.times do |i|
       writer = items.keys[i].to_s + "="
@@ -117,13 +118,39 @@ class Model
     keys
   end
 
+  def self.has_many?(selfklass, classname)
+    classname = classname.to_s.chomp('s').capitalize
+    if Object.const_defined?(classname)
+      klass = Object.const_get(classname)
+      if klass < Model && klass::ATTRS.include?("#{selfklass.to_s.downcase}Id".to_sym)
+        return true
+      end
+    end
+    return false
+  end
+
+  def self.get_by(method, args)
+    db = ConnectionPool.instance.obtain
+    rows, keys = get_from_model(db, self, {"m.#{method.to_s.split("_")[-1]}" => args.first})
+    ConnectionPool.instance.release(db)
+    puts rows.inspect
+    rows.map{|row|get_from_keys(row, keys)}
+  end
+
+  def self.get_many(method, args)
+    klass = Object.const_get(method.to_s.chomp('s').capitalize)
+    db = ConnectionPool.instance.obtain
+    rows, keys = get_from_model(db, klass, {"#{self.to_s.downcase}Id" => args.first})
+    ConnectionPool.instance.release(db)
+    rows.map{|row|klass.get_from_keys(row, keys)}
+  end
+
   def self.method_missing(method, *args)
     result = []
     if method.to_s.start_with?"get_by_"
-      db = ConnectionPool.instance.obtain
-      rows, keys = get_from_model(db, self, {"m.#{method.to_s.split("_")[-1]}" => args.first})
-      ConnectionPool.instance.release(db)
-      result = rows.map{|row|get_from_keys(row, keys)}
+      result = get_by(method, args)
+    elsif has_many?(self, method)
+      result = get_many(method, args)
     else
       raise ArgumentError, "Missing method #{method}"
     end
@@ -131,17 +158,8 @@ class Model
   end
 
   def method_missing(method, *args)
-    result = []
-    if method.to_s.end_with?"s"
-      klass = Object.const_get(method.to_s.chomp('s').capitalize)
-      db = ConnectionPool.instance.obtain
-      rows, keys = itself.class.get_from_model(db, klass, {"#{itself.class.to_s.downcase}Id" => @id})
-      ConnectionPool.instance.release(db)
-      result = rows.map{|row|klass.get_from_keys(row, keys)}
-    else
-      raise ArgumentError, "Missing method #{method}"
-    end
-    result
+    args << @id
+    itself.class.method_missing(method, args)
   end
 
 end
